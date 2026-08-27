@@ -1,0 +1,366 @@
+# Demetrios Smart Agriculture Rover — Complete Wiring Guide
+### Arduino Mega 2560 R3 Edition
+
+This guide uses **only** the real pin numbers printed on the Mega 2560 board. No solar panel. No grass-cutter. Every component you listed is used, and nothing extra is invented.
+
+---
+
+## 0. Why the Mega (and two rules you must never break)
+
+The Mega has way more pins than an Uno, so we can give every sensor/module its own dedicated pin — no multiplexing tricks needed.
+
+**Rule 1 — Never power motors, the pump, or the big MG996R servo from the Arduino's 5V pin.** The Arduino's onboard regulator can only supply ~500mA–1A total. Motors and pumps pull amps. You will fry the board.
+
+**Rule 2 — Everything must share one common ground.** Battery, both L298N boards, the buck converter, the Arduino, every sensor, both servos, the relay, and the ESP32-CAM must all have their GND wires tied to the same ground network. Without this, signals won't read correctly even if power is technically present.
+
+---
+
+## MEGA PIN MAP (memorize this before you start)
+
+| Pin range | What it's for |
+|---|---|
+| PWM pins | 2–13, 44–46 |
+| Serial0 (0/1) | USB programming — never wire anything else here |
+| Serial1 | TX1 = pin 18, RX1 = pin 19 |
+| Serial2 | TX2 = pin 16, RX2 = pin 17 |
+| Serial3 | TX3 = pin 14, RX3 = pin 15 (kept free/unused in this build) |
+| A0–A15 | Analog inputs |
+
+---
+
+## FULL PIN ALLOCATION TABLE
+
+### L298N #1 — drives RIGHT side (Motor 1 + Motor 3)
+| L298N #1 pin | Arduino Mega pin |
+|---|---|
+| ENA (PWM speed, Motor 1) | D2 (PWM) |
+| IN1 | D22 |
+| IN2 | D23 |
+| IN3 | D24 |
+| IN4 | D25 |
+| ENB (PWM speed, Motor 3) | D3 (PWM) |
+| OUT1, OUT2 | → Motor 1 (right) red/black |
+| OUT3, OUT4 | → Motor 3 (right) red/black |
+| 12V / VS | Battery + (power bus, not breadboard) |
+| GND | Common ground bus |
+| 5V (logic out pin) | Mega 5V pin |
+
+### L298N #2 — drives LEFT side (Motor 2 + Motor 4)
+| L298N #2 pin | Arduino Mega pin |
+|---|---|
+| ENA (PWM speed, Motor 2) | D4 (PWM) |
+| IN1 | D26 |
+| IN2 | D27 |
+| IN3 | D28 |
+| IN4 | D29 |
+| ENB (PWM speed, Motor 4) | D5 (PWM) |
+| OUT1, OUT2 | → Motor 2 (left) red/black |
+| OUT3, OUT4 | → Motor 4 (left) red/black |
+| 12V / VS | Battery + (power bus) |
+| GND | Common ground bus |
+| 5V (logic out pin) | Mega 5V pin |
+
+### Sensors & modules
+| Component pin | Mega pin |
+|---|---|
+| DHT11 Data | D12 |
+| DHT11 VCC / GND | 5V rail / GND |
+| Soil moisture AOUT | A0 |
+| Soil moisture VCC / GND | 5V rail / GND |
+| HC-SR04 Trig | D10 |
+| HC-SR04 Echo | D11 |
+| HC-SR04 VCC / GND | 5V rail / GND |
+| NEO-6M GPS TX | Mega RX1 = pin 19 |
+| NEO-6M GPS RX | Mega TX1 = pin 18 |
+| GPS VCC / GND | 5V rail / GND |
+| HC-05 TX | Mega RX2 = pin 17 |
+| HC-05 RX | Mega TX2 = pin 16 **(through voltage divider — see Stage 5)** |
+| HC-05 VCC / GND | 5V rail / GND |
+| SG90 servo signal | D6 (PWM) |
+| MG996R servo signal | D7 (PWM) |
+| Servo power (both) | External 5–6V rail from buck converter — **not** Mega 5V pin |
+| Relay IN1 (pump channel) | D8 |
+| Relay IN2 (spare channel) | D9 |
+| Relay VCC / GND | 5V rail / GND |
+| ESP32-CAM | Own 5V feed from buck converter + own WiFi link to phone app — no data pins to Mega (see Stage 9) |
+
+**No pin conflicts:** motor PWM pins (2–5) don't overlap servo PWM pins (6–7); direction pins (22–29) are far from everything else; both hardware serial ports used (1 for GPS, 2 for HC-05) leave Serial0 free for USB and Serial3 completely free.
+
+---
+
+## ENA/ENB and 5V-EN jumper situation (read before touching the L298N boards)
+
+Each L298N board actually has **two different jumpers** — don't confuse them:
+
+1. **The small "5V-EN" jumper near the 12V terminal.** This connects an onboard 5V regulator to the board's 5V-out pin. Since your battery is 12V and you already have a separate buck converter, **remove this jumper on both boards.** Instead, feed the L298N's 5V pin from the Mega's 5V pin (or the buck 5V rail) — this only powers the driver chip's *logic*, which draws a tiny amount of current, so the Mega can handle it fine.
+2. **The ENA and ENB jumper caps** (little black jumper blocks sitting directly on the ENA/ENB pins). If left ON, the motor always runs at full speed with no PWM control. Since you want speed control, **remove both ENA and ENB jumper caps on both boards** and wire ENA/ENB to the Mega PWM pins listed above.
+
+---
+
+## STAGE 1: Arduino + L298N #1 + two motors (right side)
+
+**Components needed:** Mega 2560, L298N #1, Motor 1, Motor 3, a few jumper wires, USB cable for testing (no battery yet).
+
+**Wiring:**
+- Mega D2 → L298N #1 ENA
+- Mega D22 → L298N #1 IN1
+- Mega D23 → L298N #1 IN2
+- Mega D24 → L298N #1 IN3
+- Mega D25 → L298N #1 IN4
+- Mega D3 → L298N #1 ENB
+- Motor 1 red/black → OUT1/OUT2
+- Motor 3 red/black → OUT3/OUT4
+- L298N #1 GND → Mega GND (this is your first ground link)
+- Remove ENA/ENB jumper caps and the 5V-EN jumper as described above
+
+**Do NOT connect yet:** the 12V battery. At this stage the motors won't spin at full torque — we're only checking direction logic — so power the L298N logic side only, temporarily, from the Mega 5V pin.
+
+**Test:** Upload a simple sketch that sets IN1=HIGH, IN2=LOW, IN3=HIGH, IN4=LOW, and ENA/ENB=200 (PWM). Motor 1 and Motor 3 should attempt to spin the same direction (they'll be weak/slow without full 12V — that's expected and fine for this test). Reverse the IN pins and confirm both reverse too. If a motor doesn't respond, check its OUT1/OUT2 wiring before moving on.
+
+---
+
+## STAGE 2: L298N #2 + two motors (left side)
+
+**Components needed:** L298N #2, Motor 2, Motor 4.
+
+**Wiring:**
+- Mega D4 → L298N #2 ENA
+- Mega D26 → L298N #2 IN1
+- Mega D27 → L298N #2 IN2
+- Mega D28 → L298N #2 IN3
+- Mega D29 → L298N #2 IN4
+- Mega D5 → L298N #2 ENB
+- Motor 2 red/black → OUT1/OUT2
+- Motor 4 red/black → OUT3/OUT4
+- L298N #2 GND → same common ground bus as L298N #1
+- Remove its ENA/ENB caps and 5V-EN jumper too
+
+**Do NOT connect:** 12V battery yet.
+
+**Test:** Same logic test as Stage 1, but now for Motor 2/Motor 4. Once both stages pass individually, run all four together and confirm forward = all four spin the "forward" direction, and that a left/right turn command spins right-side and left-side motors in opposite directions.
+
+---
+
+## STAGE 3: Power distribution
+
+**Components needed:** 12V 7Ah battery, LM2596 buck converter, long breadboard, thick-gauge wire for motor power, a power switch (recommended, even if not in your list — highly advisable to add one, otherwise skip if you don't have one).
+
+**Wiring (this is the most important stage — go slow):**
+- Battery + → splits three ways using solid wire/terminal block (NOT the breadboard):
+  1. → L298N #1 "12V/VS" terminal
+  2. → L298N #2 "12V/VS" terminal
+  3. → LM2596 buck converter "IN+"
+  4. → Relay module's common (COM) terminal, for the pump circuit (details in Stage 8)
+- Battery − → common ground bus (direct wire, not breadboard) → also to LM2596 "IN−"
+- LM2596 OUT+ : **before connecting anything**, power the buck converter alone and use a multimeter to adjust its trimpot until output reads exactly **5.0V**. This is critical — factory default is often not 5V.
+- LM2596 OUT+ → long breadboard's red power rail
+- LM2596 OUT− → long breadboard's blue/black ground rail, and this rail also ties into the common ground bus
+- Mega 5V pin → long breadboard red rail (this now replaces your USB power once battery is connected)
+- Mega GND → long breadboard black rail
+
+**Do NOT put through the breadboard:** the battery-to-L298N 12V wires, and the battery-to-pump wire. These carry high current and belong on solid wire/terminal blocks only. The breadboard is strictly for the low-current 5V logic rail.
+
+**Test:** With everything grounded together, power the whole rig from the battery only (unplug USB). Repeat the Stage 1/2 motor test — now the motors should spin with full torque since they're getting real 12V.
+
+---
+
+## STAGE 4: Sensors (small breadboard)
+
+**Components needed:** DHT11, soil moisture sensor, HC-SR04, small breadboard, 10kΩ pull-up resistor (only needed if your DHT11 module doesn't already have one built in — most 3-pin breakout boards do).
+
+**Wiring (all through the small breadboard for shared 5V/GND access):**
+- DHT11: VCC → 5V rail, GND → ground rail, Data → Mega D12
+- Soil moisture sensor: VCC → 5V rail, GND → ground rail, AOUT → Mega A0
+- HC-SR04: VCC → 5V rail, GND → ground rail, Trig → Mega D10, Echo → Mega D11
+
+**Do NOT connect:** soil sensor's digital output pin (DOUT) if it has one — you only need the analog pin (AOUT) for real moisture readings.
+
+**Test:** Simple sketch printing DHT11 temp/humidity, soil moisture raw value (dry air ≈ high number, wet soil ≈ low number, or vice versa depending on your exact module — check by touching probes to wet soil), and HC-SR04 distance in cm. Wave your hand in front of the ultrasonic sensor and confirm the distance value changes.
+
+---
+
+## STAGE 5: HC-05 Bluetooth
+
+**Components needed:** HC-05 module, two resistors for a voltage divider (recommended: 1kΩ and 2kΩ).
+
+**Why the divider:** The Mega's TX pin outputs 5V logic. The HC-05's RX pin is only rated up to about 3.6V. Feeding it 5V directly can damage it over time.
+
+**Wiring:**
+- HC-05 VCC → 5V rail, GND → ground rail
+- HC-05 TX → Mega RX2 (pin 17) — direct connection is fine, since 3.3V is high enough for the Mega to read as logic HIGH
+- Mega TX2 (pin 16) → 1kΩ resistor → HC-05 RX, **and** a 2kΩ resistor from that same junction point down to GND. This divides the 5V signal down to about 3.3V before it reaches the HC-05.
+
+**Do NOT connect:** HC-05 RX directly to Mega TX2 without the divider.
+
+**Test:** Pair the HC-05 with your phone's Bluetooth, open a serial Bluetooth terminal app, and send a test character. Confirm your Mega sketch receives it on Serial2. Then confirm the reverse — Mega prints something and it shows up in the phone app.
+
+---
+
+## STAGE 6: GPS (NEO-6M)
+
+**Components needed:** NEO-6M GPS module.
+
+**Wiring:**
+- GPS VCC → 5V rail, GND → ground rail
+- GPS TX → Mega RX1 (pin 19)
+- GPS RX → Mega TX1 (pin 18)
+
+Most NEO-6M breakout boards include their own voltage regulation and are generally tolerant of direct connection to Mega's 5V-logic TX line, but if you want to be extra safe, use the same resistor-divider trick as Stage 5 on this line too.
+
+**Test:** Use a simple TinyGPS++ style sketch reading Serial1. Take the rover outdoors (GPS needs open sky — it won't get a fix indoors) and confirm latitude/longitude values start printing after a minute or two of acquiring satellites.
+
+---
+
+## STAGE 7: Servos (plough + seed sowing)
+
+**Components needed:** SG90, MG996R.
+
+**Wiring:**
+- SG90 signal (usually orange wire) → Mega D6
+- MG996R signal (usually orange/yellow wire) → Mega D7
+- **Both servos' power wire (red)** → buck converter 5V rail (or a second dedicated buck converter, ideally rated for at least 2A if using both together, since the MG996R alone can spike to 1–2.5A when under load)
+- Both servos' ground wire (brown/black) → common ground bus
+
+**Do NOT power servos from the Mega 5V pin** — this is the #1 cause of random resets/browning-out on rover builds.
+
+**Test:** Sweep each servo through its range individually with the Servo library. Watch that the Mega doesn't reset when the MG996R moves under load — if it does, your 5V rail needs more current headroom (bigger/second buck converter).
+
+---
+
+## STAGE 8: Relay + water pump
+
+**Components needed:** 2-channel relay module, 12V water pump.
+
+**Wiring:**
+- Relay VCC → 5V rail, GND → ground rail
+- Relay IN1 → Mega D8 (this channel controls the pump)
+- Relay IN2 → Mega D9 (spare, unused for now)
+- Battery + → relay's COM terminal (channel 1)
+- Relay's NO (Normally Open) terminal → pump's + wire
+- Pump's − wire → common ground bus (back to battery −)
+
+This means the pump's 12V power path runs: **battery → relay contact → pump → ground**, and the relay only carries a small control signal from the Mega — the Mega never touches the pump's high-current path directly.
+
+**Do NOT connect:** the pump directly to any Arduino pin, and do not run the pump's 12V wires through either breadboard.
+
+**Test:** Toggle D8 HIGH/LOW in a sketch and listen for the relay's audible click each time, then confirm the pump turns on/off accordingly with the battery connected.
+
+---
+
+## STAGE 9: ESP32-CAM
+
+**Components needed:** ESP32-CAM module (with either a USB-TTL programmer for flashing it once, or an existing FTDI adapter — used only during setup, not part of the permanent rover wiring).
+
+**Important architecture point:** The ESP32-CAM should be thought of as its **own independent device**, not a Mega peripheral. It has its own WiFi radio and can host its own video stream directly to your phone app — it does **not** need a data connection to the Mega at all for live camera. Trying to send video frames through the Mega's serial pins would be far too slow anyway.
+
+**Wiring (power only):**
+- ESP32-CAM 5V pin → buck converter 5V rail (give it a dedicated feed if possible — the camera draws current spikes when capturing/transmitting, and a shared rail with servos can cause brownouts)
+- ESP32-CAM GND → common ground bus
+
+**Do NOT wire any ESP32-CAM GPIO to the Mega for the camera feed.** If later you want the Mega to trigger a photo capture, that's a separate, optional addition using Serial3 (pins 14/15) — not required for the current feature set.
+
+**Test:** Flash the standard CameraWebServer example, connect it to your home/hotspot WiFi (or run it as its own access point), and confirm you can view the live stream in a browser or your app before mounting it on the rover.
+
+---
+
+## STAGE 10: Complete integration testing
+
+1. Re-check every ground connection with a multimeter continuity test — battery−, both L298N GNDs, buck converter GND, Mega GND, both breadboard ground rails, both servo grounds, relay GND, ESP32-CAM GND should all beep as connected.
+2. Power everything from the battery (no USB).
+3. Test movement (forward/backward/left/right/stop) via Bluetooth commands from your app.
+4. While driving, confirm sensor readings (soil, temp/humidity, ultrasonic) still update correctly — motor electrical noise can sometimes interfere with sensor readings if grounding is poor, so this is a good stress test.
+5. Trigger the plough servo, then the seed-sowing servo, individually while the rover is stationary.
+6. Trigger the pump via relay.
+7. Open the ESP32-CAM stream on your phone while the rover drives around.
+8. Finally, confirm GPS coordinates update while the rover moves outdoors.
+
+If everything in step 3–8 works simultaneously without resets or erratic behavior, your wiring is complete and stable.
+
+---
+
+## FINAL MASTER WIRING TABLE
+
+| # | From | To |
+|---|---|---|
+| 1 | L298N #1 ENA | Mega D2 |
+| 2 | L298N #1 IN1 | Mega D22 |
+| 3 | L298N #1 IN2 | Mega D23 |
+| 4 | L298N #1 IN3 | Mega D24 |
+| 5 | L298N #1 IN4 | Mega D25 |
+| 6 | L298N #1 ENB | Mega D3 |
+| 7 | L298N #1 OUT1/OUT2 | Motor 1 (right) |
+| 8 | L298N #1 OUT3/OUT4 | Motor 3 (right) |
+| 9 | L298N #1 12V | Battery + |
+| 10 | L298N #1 5V | Mega 5V |
+| 11 | L298N #1 GND | Common ground |
+| 12 | L298N #2 ENA | Mega D4 |
+| 13 | L298N #2 IN1 | Mega D26 |
+| 14 | L298N #2 IN2 | Mega D27 |
+| 15 | L298N #2 IN3 | Mega D28 |
+| 16 | L298N #2 IN4 | Mega D29 |
+| 17 | L298N #2 ENB | Mega D5 |
+| 18 | L298N #2 OUT1/OUT2 | Motor 2 (left) |
+| 19 | L298N #2 OUT3/OUT4 | Motor 4 (left) |
+| 20 | L298N #2 12V | Battery + |
+| 21 | L298N #2 5V | Mega 5V |
+| 22 | L298N #2 GND | Common ground |
+| 23 | Battery + | LM2596 IN+ |
+| 24 | Battery − | LM2596 IN−, common ground |
+| 25 | LM2596 OUT+ (trim to 5.0V) | Long breadboard 5V rail |
+| 26 | LM2596 OUT− | Long breadboard GND rail |
+| 27 | DHT11 Data | Mega D12 |
+| 28 | Soil moisture AOUT | Mega A0 |
+| 29 | HC-SR04 Trig | Mega D10 |
+| 30 | HC-SR04 Echo | Mega D11 |
+| 31 | HC-05 TX | Mega RX2 (pin 17) |
+| 32 | HC-05 RX (via 1k/2k divider) | Mega TX2 (pin 16) |
+| 33 | GPS TX | Mega RX1 (pin 19) |
+| 34 | GPS RX | Mega TX1 (pin 18) |
+| 35 | SG90 signal | Mega D6 |
+| 36 | MG996R signal | Mega D7 |
+| 37 | SG90/MG996R power | Buck 5V rail |
+| 38 | Relay IN1 | Mega D8 |
+| 39 | Relay IN2 | Mega D9 |
+| 40 | Relay COM | Battery + |
+| 41 | Relay NO | Pump + |
+| 42 | Pump − | Common ground |
+| 43 | ESP32-CAM 5V | Buck 5V rail |
+| 44 | ESP32-CAM GND | Common ground |
+
+---
+
+## ASCII BLOCK DIAGRAM
+
+```
+                     [12V 7Ah Battery]
+                             |
+                    (power switch, optional)
+                             |
+              ---------------------------------
+              |              |                |
+     [L298N #1 12V]   [L298N #2 12V]   [LM2596 Buck Converter]
+              |              |                |
+      [Motor 1+3]      [Motor 2+4]      trimmed to 5.0V
+       (right side)     (left side)            |
+              |              |    -------------------------------
+              |              |    |      |       |       |      |
+              |              |  [Mega]  [Servos] [Relay] [HC-05][GPS]
+              |              |    |                 |
+              |              |    |              [Pump, via
+              |              |    |               relay switch,
+              |              |    |               powered from
+              |              |    |               battery +]
+              |              |    |
+              |              |    -----------------------------------
+              |              |    |         |          |            |
+              |              |  [DHT11] [Soil Sensor] [HC-SR04]  [ESP32-CAM]
+              |              |                                   (own WiFi
+              |              |                                   to phone app,
+              |              |                                   no data pins
+              |              |                                   to Mega)
+              |              |
+        [ALL GROUNDS TIED TOGETHER: battery−, both L298N GND,
+         buck GND, Mega GND, every sensor/module GND]
+```
+
+**Phone app** connects to the rover two ways: Bluetooth (HC-05 ↔ Mega, for drive/plough/sow/pump commands) and WiFi (direct to ESP32-CAM, for the live video feed) — these are two separate, independent links, not one combined connection.
