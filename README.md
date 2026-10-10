@@ -1,48 +1,49 @@
 # 🌱 Smart Agriculture Rover System
 
-An AI-powered smart agriculture rover that combines robotics, IoT, and machine learning to support farming activities through seed dispensing, irrigation, environmental monitoring, GPS integration, and crop recommendation.
+An AI-powered smart agriculture rover combining robotics, IoT, and machine learning to support farming activities through seed dispensing, irrigation, environmental monitoring, GPS integration, camera functionality, and crop recommendation.
 
 ## 📌 Project Overview
 
-The **Smart Agriculture Rover System** is an academic project developed to explore the use of artificial intelligence, robotics, and IoT in modern agriculture.
+The **Smart Agriculture Rover System** is an academic project developed at Atria Institute of Technology, Bengaluru, to explore the application of artificial intelligence, robotics, and IoT in agriculture.
 
-The rover supports farming operations such as movement, seed dispensing, and watering. Its sensors monitor selected environmental conditions, while a GPS module provides location data when a satellite fix is available.
+The rover supports movement, seed dispensing, and watering. Its sensors provide selected environmental readings, while a NEO-6M GPS module is included for geographic positioning when a valid satellite fix is available.
 
-A trained machine learning model recommends suitable crops using agricultural and environmental parameters. The accompanying mobile application provides an interface for rover control, sensor monitoring, crop prediction, camera functionality, and farming-related insights.
+The accompanying mobile application provides interfaces for rover control, sensor monitoring, camera functionality, crop prediction, and farming-related insights. A Flask backend connects supported application features with the crop prediction model and database services.
 
 The project aligns with **United Nations Sustainable Development Goal 2 (Zero Hunger)** by exploring technology-assisted agricultural practices.
 
 ## ✨ Key Features
 
-- 🚜 **Rover Movement:** Motorized movement controlled through the rover's control system.
-- 🌱 **Seed Dispensing:** Servo-assisted mechanism for dispensing seeds.
-- 💧 **Irrigation:** Watering mechanism to support agricultural activities.
-- 🌡️ **Environmental Monitoring:** Soil moisture, temperature, and humidity readings using available sensors.
-- 📏 **Distance Measurement:** Ultrasonic sensing for distance measurement and obstacle detection.
-- 📍 **GPS Integration:** NEO-6M GPS module for obtaining geographic location data when a satellite fix is available.
-- 📷 **Camera Integration:** ESP32-CAM support for image capture.
-- 🤖 **AI-Based Crop Recommendation:** A trained machine learning model predicts suitable crops using seven agricultural input features.
-- 📱 **Mobile Application:** An interface for rover control, sensor monitoring, crop prediction, and other project features.
-- 🌐 **Backend Integration:** Flask REST API and MongoDB Atlas integration for supported application operations.
+- 🚜 **Rover Movement:** Motorized movement through the rover's control system.
+- 🌱 **Seed Dispensing:** Servo-assisted seed dispensing mechanism.
+- 💧 **Irrigation:** Watering mechanism for agricultural applications.
+- 🌡️ **Environmental Monitoring:** Soil moisture, temperature, and humidity readings from the available sensors.
+- 📏 **Distance Measurement:** Ultrasonic distance sensing for obstacle detection.
+- 📍 **GPS Integration:** NEO-6M GPS module for geographic positioning when satellite reception permits.
+- 📷 **Camera Integration:** ESP32-CAM for image capture.
+- 🤖 **AI-Based Crop Recommendation:** Machine learning model that predicts suitable crops from seven agricultural input features.
+- 📱 **Android Mobile Application:** Installable Android application developed using React Native and Expo.
+- 🌐 **Backend Integration:** Flask REST API and MongoDB Atlas for supported application operations.
+- 🔐 **User Authentication:** Login and registration interfaces.
 
 ## 🛠️ Hardware Components
 
 | Component | Purpose |
 |---|---|
-| Arduino Mega 2560 | Controls the rover's hardware |
+| Arduino Mega 2560 | Controls rover hardware and connected peripherals |
 | ESP32-CAM | Captures images |
-| NEO-6M GPS Module | Provides geographic location data when a satellite fix is available |
-| L298N Motor Driver | Controls the DC motors |
+| NEO-6M GPS Module | Obtains geographic coordinates when a satellite fix is available |
+| L298N Motor Driver | Controls the drive motors |
 | DC Geared Motors | Drive the rover wheels |
-| HC-05 Bluetooth Module | Enables Bluetooth communication |
+| HC-05 Bluetooth Module | Supports Bluetooth communication |
 | Soil Moisture Sensor | Measures soil moisture |
 | DHT11 Sensor | Measures temperature and humidity |
-| HC-SR04 Ultrasonic Sensor | Measures distance for obstacle detection |
+| HC-SR04 Ultrasonic Sensor | Measures distance |
 | Servo Motors | Operate the seed dispensing and other mechanical mechanisms |
 | Water Pump / Irrigation Mechanism | Supports watering operations |
 | Battery | Supplies power to the rover |
 
-*Note: Actual component behavior depends on the implemented wiring, firmware, and control logic.*
+*Note: The actual operation of each component depends on the implemented wiring, firmware, power supply, and control logic.*
 
 ## 💻 Technology Stack
 
@@ -54,6 +55,7 @@ The project aligns with **United Nations Sustainable Development Goal 2 (Zero Hu
 ### Backend
 - Python
 - Flask
+- Flask-CORS
 - MongoDB Atlas
 - REST API
 
@@ -66,17 +68,18 @@ The project aligns with **United Nations Sustainable Development Goal 2 (Zero Hu
 ### Hardware and Communication
 - Arduino Mega 2560
 - ESP32-CAM
-- NEO-6M GPS Module
-- HC-05 Bluetooth Module
-- Motor driver, sensors, and servo motors
+- NEO-6M GPS
+- HC-05 Bluetooth
+- L298N motor driver
+- Sensors and servo motors
 
 ## 🤖 AI-Based Crop Recommendation
 
-The system includes a trained machine learning model that recommends suitable crops based on agricultural and environmental parameters.
+The system includes a trained machine learning model that recommends suitable crops using agricultural and environmental parameters.
 
 ### Input Features
 
-The model uses seven features:
+The model uses seven input features:
 
 | Feature | Description |
 |---|---|
@@ -90,49 +93,65 @@ The model uses seven features:
 
 ### How It Works
 
-1. The user provides the required input values through the crop prediction interface.
-2. The application sends the input parameters to the backend prediction API.
-3. The trained machine learning model processes the seven features.
-4. The model predicts a suitable crop based on patterns learned from the training dataset.
-5. The predicted crop is returned to the application and displayed to the user.
+1. The user enters the required agricultural parameters in the crop prediction interface.
+2. The application sends the values to the backend prediction API.
+3. The trained model processes the seven input features.
+4. The model predicts a suitable crop based on patterns learned from its training dataset.
+5. The prediction is returned to the application for display.
 
 ### Important Sensor Clarification
 
-The rover does **not** have a physical NPK sensor or soil pH sensor. These values can be entered manually by the user along with the other required model inputs.
+**The rover does not have physical NPK or soil pH sensors.**
 
-The model is trained to use all seven features and can make predictions using the supplied values without requiring the rover itself to measure NPK or pH.
+Nitrogen, phosphorus, potassium, and pH values must be supplied manually by the user. Temperature, humidity, and soil moisture can be monitored through the rover's available physical sensors, but the crop prediction model requires its specified input values.
 
-The rover's physical sensors separately support environmental monitoring, including soil moisture, temperature, and humidity. The crop recommendation model and the rover's sensor system serve complementary purposes.
+The model's seven features are based on the crop recommendation dataset. The system should not be interpreted as automatically measuring every input directly from the field.
 
 ## 📍 GPS Integration
 
 The rover incorporates a **NEO-6M GPS module** intended to obtain geographic coordinates from GPS satellites.
 
-GPS functionality can support future location-aware agricultural applications, such as recording rover positions and mapping field activities.
+GPS can support location-aware agricultural applications, including recording rover positions and mapping field activities.
 
-GPS performance depends on satellite visibility, antenna placement, wiring, and module configuration. A valid satellite fix is required before reliable location coordinates can be obtained.
+A valid satellite fix is required for reliable positioning. Performance depends on satellite visibility, antenna placement, wiring, and module configuration. GPS-based field mapping and position logging are potential extensions unless implemented and verified in the current system.
+
+## 📷 Camera Integration
+
+The system includes an ESP32-CAM module for image capture.
+
+Camera functionality depends on the camera configuration, firmware, network or communication setup, and the current application integration. Further image-based crop analysis can be developed as an enhancement.
 
 ## 📱 Mobile Application
 
-The mobile application is developed using React Native and Expo.
+The mobile application is developed using **React Native and Expo**.
 
-Its screens include:
+The application includes the following screens:
 
 - **Home / Dashboard:** Overview of the system.
-- **Control:** Interface for controlling the rover.
+- **Control:** Interface for rover control.
 - **Sensors:** Displays available sensor readings.
 - **Camera:** Camera-related functionality.
-- **Crop Prediction:** Interface for entering crop parameters and requesting predictions.
+- **Crop Prediction:** Interface for entering agricultural parameters and requesting crop recommendations.
 - **Insights:** Farming-related information.
 - **Login / Register:** User authentication.
 - **Settings:** Application preferences.
 - **About:** Project information.
 
-Feature availability depends on the current application, hardware, and backend configuration.
+Feature availability depends on the current application implementation, hardware connections, and backend configuration.
+
+### Android APK
+
+An installable Android APK has been built and installed on an Android device for testing.
+
+The APK allows the application to be installed without relying solely on the Expo development QR code.
+
+**Distribution:** The APK can be published as a downloadable asset under the repository's GitHub **Releases** section. Once a release has been published, add its direct download link here.
+
+The APK's functionality depends on the availability and configuration of the backend services it uses.
 
 ## 🌐 Backend Architecture
 
-The backend is developed using Flask and provides REST API endpoints for application operations.
+The backend is developed using **Python and Flask**. It exposes REST API endpoints for supported application operations and integrates with MongoDB Atlas for database-backed functionality.
 
 ### Main API Endpoints
 
@@ -141,51 +160,57 @@ The backend is developed using Flask and provides REST API endpoints for applica
 | `/predict` | Accepts crop prediction inputs and returns a model recommendation |
 | `/sensors` | Supports sensor-related data operations |
 
-The backend uses MongoDB Atlas for supported database operations. The database connection string is configured through the `MONGO_URI` environment variable.
+The exact request methods, payload formats, and response structures are defined by the backend implementation.
+
+### Database Configuration
+
+The backend reads the MongoDB connection string from the `MONGO_URI` environment variable.
 
 ```python
 MONGO_URI = os.getenv("MONGO_URI")
 ```
 
-The backend has been deployed on Replit during development. Its availability depends on the current deployment configuration.
+Configure this variable in the backend environment rather than placing database credentials directly in the source code.
+
+The backend was deployed on Replit during development. Its current availability depends on the deployment configuration and hosting status.
 
 ## 🏗️ System Architecture
 
 ```text
-                ┌────────────────────────┐
-                │   Mobile Application   │
-                │   React Native + Expo  │
-                └───────────┬────────────┘
-                            │
-                ┌───────────▼────────────┐
-                │      Flask Backend     │
-                │       REST API         │
-                └────────┬────────┬──────┘
-                         │        │
-                ┌────────▼───┐ ┌──▼───────────┐
-                │ Crop       │ │ MongoDB Atlas│
-                │ Prediction │ │   Database   │
-                │ Model      │ └──────────────┘
-                └────────────┘
+                  MOBILE APPLICATION
+                   React Native + Expo
+                          |
+                          v
+                    FLASK BACKEND
+                      REST API
+                     /        \
+                    v          v
+           CROP PREDICTION   MONGODB ATLAS
+                MODEL        DATABASE
 
 
-                ┌────────────────────────┐
-                │     Rover Hardware     │
-                │                        │
-                │ Arduino Mega 2560      │
-                │ ESP32-CAM              │
-                │ NEO-6M GPS Module      │
-                │ Motors and Driver      │
-                │ Sensors and Servos     │
-                │ Irrigation Mechanism   │
-                └────────────────────────┘
+                   ROVER HARDWARE
+                          |
+                    Arduino Mega
+                          |
+          +---------------+----------------+
+          |               |                |
+          v               v                v
+      Drive Motors     Sensors and      Servo Motors
+                       Peripherals     and Irrigation
+          |
+          +---- ESP32-CAM
+          |
+          +---- NEO-6M GPS
+          |
+          +---- HC-05 Bluetooth
 ```
 
-*The diagram represents the system's main components. The actual communication paths depend on the implemented connections and configuration.*
+*This is a high-level conceptual diagram. It does not imply that every hardware component communicates directly with the backend or mobile application. Actual communication paths depend on the implemented wiring, firmware, and software configuration.*
 
 ## 📂 Project Structure
 
-The repository contains the mobile application, backend, and supporting project files.
+The following is an illustrative overview. Update folder names and files if the repository structure changes.
 
 ```text
 SmartAgricultureRover/
@@ -201,7 +226,7 @@ SmartAgricultureRover/
 └── README.md
 ```
 
-*This is an illustrative structure. Update it to match the actual folders and files in the repository.*
+The repository may contain additional application screens, configuration files, model-related files, and supporting resources.
 
 ## 🚀 Getting Started
 
@@ -210,8 +235,8 @@ SmartAgricultureRover/
 - Node.js and npm
 - Python
 - Git
-- Expo-compatible development environment
-- MongoDB Atlas account for database-backed functionality
+- An Expo-compatible development environment
+- A MongoDB Atlas account if database-backed functionality is required
 
 ### 1. Clone the Repository
 
@@ -234,43 +259,54 @@ Start the Expo development server:
 npx expo start
 ```
 
-Follow the Expo instructions to run the application on a compatible device or emulator.
+Follow the Expo instructions to run the application on a compatible Android device or emulator.
 
 ### 3. Set Up the Backend
 
-Navigate to the backend directory:
+Open a terminal in the project directory and navigate to the backend:
 
 ```bash
 cd Backend
 ```
 
-Create and activate a Python virtual environment if required.
+Create a virtual environment:
 
-Install the dependencies specified by the backend's actual imports and dependency file. For example:
+```bash
+python -m venv .venv
+```
+
+Activate it on Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+Install the dependencies required by the backend. For example:
 
 ```bash
 pip install flask flask-cors pymongo python-dotenv
 ```
 
-Additional packages may be required for the machine learning model and other backend functionality.
+Additional packages may be necessary for the machine learning model or other backend functionality. Install the actual dependencies used by the current implementation.
 
-Configure the MongoDB connection string using the `MONGO_URI` environment variable. Start the Flask application using the entry point and configuration defined in `app.py`.
+Configure `MONGO_URI` in your backend environment if MongoDB is required. Use the entry point and startup command specified by the current backend code and deployment configuration.
 
-**Note:** The exact startup command and dependency list should match the current backend implementation.
+**Important:** The mobile application and backend must be configured to communicate with the correct API address. Local development addresses are not automatically accessible from a physical phone or a deployed application.
 
 ## 🔐 Security
 
-- Keep database credentials and API keys private.
-- Do not commit `.env` files or private signing keys.
-- Store production secrets in the hosting platform's environment settings.
+- Do not commit `.env` files, database credentials, API keys, or private signing keys.
+- Keep sensitive configuration in environment variables.
 - Use placeholder values in `.env.example`.
+- Do not expose database connection strings in screenshots, logs, or documentation.
 - Rotate any credentials that may have been exposed.
+- Review repository history before publishing if sensitive files were committed previously.
 
 ## 🌍 Sustainable Development Goal
 
 ### SDG 2 — Zero Hunger
 
-The project explores how AI, robotics, and IoT can support agricultural activities.
+The project explores how artificial intelligence, robotics, and IoT can support agricultural activities.
 
 Its objectives include:
 
@@ -288,13 +324,13 @@ Potential improvements include:
 
 - Integration of physical NPK and soil pH sensors.
 - More advanced autonomous navigation.
-- Enhanced irrigation control using soil moisture readings.
-- Improved camera-based crop and field analysis.
+- Improved irrigation control based on soil moisture readings.
+- Camera-based crop and field analysis.
 - GPS-based field mapping and rover position logging.
-- Field testing and performance evaluation.
-- Improved communication between the rover, application, and backend.
+- Improved communication between hardware, mobile application, and backend.
+- Field testing and systematic performance evaluation.
 
-These are proposed enhancements, not claims about existing functionality.
+These are proposed enhancements and should not be interpreted as existing capabilities unless implemented and tested.
 
 ## 👩‍💻 Project Information
 
@@ -306,8 +342,8 @@ These are proposed enhancements, not claims about existing functionality.
 
 ## ⚠️ Disclaimer
 
-This project is an academic prototype developed for educational and demonstration purposes. Crop recommendations depend on the input values supplied to the trained model and the patterns learned from its dataset. GPS functionality depends on obtaining a valid satellite fix. Real-world agricultural decisions should consider verified soil measurements, local conditions, and professional agricultural guidance.
+This project is an academic prototype developed for educational and demonstration purposes. Crop recommendations depend on the values supplied to the trained model and the patterns learned from its training dataset. GPS functionality depends on obtaining a valid satellite fix. Real-world agricultural decisions should consider verified soil measurements, local conditions, and professional agricultural guidance.
 
 ## 📄 License
 
-No license has been specified yet. Unless a license is added to the repository, reuse and redistribution remain subject to applicable copyright rules.
+No license has been specified for this repository. Until a license is added, reuse and redistribution are subject to applicable copyright rules.
