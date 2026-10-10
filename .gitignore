@@ -1,5 +1,33 @@
+```gitignore
+# Dependencies and Expo builds
 node_modules/
 .expo/
+dist/
+web-build/
+
+# Environment variables and secrets
 .env
-Backend/.env
-*.log
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python generated files
+__pycache__/
+*.py[cod]
+
+# Local signing keys
+*.keystore
+*.jks
+
+# Local archives and generated reports
+SmartAgricultureRover.zip
+project-structure.txt
+project_structure.txt
+important-files.txt
+sensitive-file-candidates.txt
+
+# Local tools and generated builds
+.claude/settings.json
+```

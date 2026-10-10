@@ -24,7 +24,7 @@ import { useBluetooth } from "../context/BluetoothContext";
 // API URL
 // ==================================================
 
-const API_URL = "http://192.168.1.35:5000";
+const API_URL = "https://smartagriculturerover.onrender.com";
 
 // ==================================================
 // CROP PREDICTION SCREEN

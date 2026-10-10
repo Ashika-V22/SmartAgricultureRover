@@ -11,7 +11,7 @@ import {
 import { Card } from "react-native-paper";
 import { LineChart } from "react-native-chart-kit";
 
-const API_URL = "http://10.97.90.77:5000";
+const API_URL = "https://smartagriculturerover.onrender.com";
 
 export default function InsightsScreen() {
   const [history, setHistory] = useState([]);

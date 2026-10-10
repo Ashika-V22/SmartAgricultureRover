@@ -14,7 +14,7 @@ import {
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://192.168.1.35:5000";
+const API_URL = "https://smartagriculturerover.onrender.com";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");

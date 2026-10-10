@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import axios from "axios";
 
-const API_URL = "http://10.97.90.77:5000";
+const API_URL = "https://smartagriculturerover.onrender.com";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
